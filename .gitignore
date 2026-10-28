@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# env 템플릿은 올린다
+!.env.example
+
+# 로컬 개발용 데이터(납품 이력 등). Supabase 연결 전까지만 쓴다
+/.data/
+/backups/
+
+# oh-my-claudecode 도구 상태
+/.omc/
