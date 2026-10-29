@@ -30,7 +30,7 @@ export async function POST(request: Request) {
 
   (await cookies()).set(SESSION_COOKIE, r.token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: process.env.cookie_ENV === "true",
     sameSite: "lax",
     path: "/",
     expires: new Date(r.expiresAt),
