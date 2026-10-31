@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { maskBizNo } from "@/domain/biz-no";
 import { FEE_STATUSES } from "@/domain/fee-ledger";
 import type { Dashboard } from "@/lib/dashboard/service";
 import { btnCls, inputCls, labelCls } from "@/components/work/types";
@@ -139,6 +140,35 @@ export function DashboardView({ initialFrom, initialTo }: { initialFrom: string;
               <dt className="text-text-secondary">검증 통과 초안 5분 달성률</dt><dd>{pct(d.metrics.kpi5min)}</dd>
               <dt className="text-text-secondary">나라장터 API 성공률</dt><dd>집계 전 (API 연결 후)</dd>
             </dl>
+          </section>
+
+          <section aria-label="리텐션 지표" className="mt-8">
+            <h2 className="text-[18px]">리텐션 지표</h2>
+            <dl className="mt-3 grid grid-cols-[220px_1fr] gap-y-1 text-[13px]">
+              <dt className="text-text-secondary">재의뢰율(첫 납품 후 180일)</dt>
+              <dd>
+                {pct(d.retention.reorder.rate)}
+                {d.retention.reorder.eligible > 0 && ` (${d.retention.reorder.reordered}/${d.retention.reorder.eligible}개 업체)`}
+              </dd>
+              <dt className="text-text-secondary">소개율</dt>
+              <dd>
+                {pct(d.retention.referral.rate)}
+                {d.retention.referral.newCompanies > 0 && ` (${d.retention.referral.referred}/${d.retention.referral.newCompanies}개 업체)`}
+              </dd>
+              <dt className="text-text-secondary">할인 적용</dt>
+              <dd>{d.retention.discounted.count}건, 공급가액 기준 {won(d.retention.discounted.totalWon)}</dd>
+              <dt className="text-text-secondary">집계에서 뺀 공사</dt>
+              <dd>{d.retention.missingBizNo}건{d.retention.missingBizNo > 0 && " (사업자등록번호 없음·형식 오류)"}</dd>
+              <dt className="text-text-secondary">재의뢰 간격</dt>
+              <dd>
+                {d.retention.intervals.length === 0
+                  ? "집계 전"
+                  : d.retention.intervals.map((i) => `${maskBizNo(i.bizNo)} 평균 ${Math.round(i.avgDays)}일(${i.count}건)`).join(" · ")}
+              </dd>
+            </dl>
+            <p className="mt-2 text-[12px] text-text-secondary">
+              기준일 {d.retention.asOf}. 업체는 사업자등록번호로 구분합니다. 베타 표본이 작으면 비율보다 업체 면담을 참고하세요.
+            </p>
           </section>
         </>
       )}

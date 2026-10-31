@@ -1,8 +1,9 @@
 // 용역비 내역 조회·기록 (SRS SR-FEE-03~07·10): 관리자만.
-// POST { action: "payment" | "taxInvoice" | "cancel" | "refund", ... } — 맞지 않으면 상태를 바꾸지 않고 이유를 돌려준다.
+// POST { action: "payment" | "taxInvoice" | "cancel" | "refund" | "reprice", ... } — 맞지 않으면 상태를 바꾸지 않고 이유를 돌려준다.
 
 import { refundAlert } from "@/domain/fee-ledger";
 import { requireAdmin } from "@/lib/auth/guard";
+import { repriceFor } from "@/lib/fees/pricing";
 import { cancelFor, getFee, recordPaymentFor, recordTaxInvoiceFor, refundFor, todayKst, type FeeActionResult } from "@/lib/fees/service";
 import { getDeliveryLog, getFeeDeps, getProjectStore } from "@/lib/ports";
 import { ID_PATTERN } from "@/lib/projects/validate";
@@ -56,6 +57,9 @@ export async function POST(request: Request, ctx: Ctx) {
     }
     case "cancel":
       r = await cancelFor(deps, id, admin.user);
+      break;
+    case "reprice":
+      r = await repriceFor(deps, id, admin.user);
       break;
     case "refund": {
       const date = str(b.date);

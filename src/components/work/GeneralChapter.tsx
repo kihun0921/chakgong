@@ -206,7 +206,8 @@ function CompanyTab({
           {text("representative", "대표자")}
           {text("companyAddress", "주소")}
           {text("companyPhone", "전화")}
-          {text("companyBizNo", "사업자등록번호")}
+          {text("companyBizNo", "사업자등록번호", { hint: "같은 번호의 이전 공사가 있으면 용역비 할인이 적용됩니다(납품·입금 전까지)." })}
+          {text("referrerBizNo", "소개한 업체 사업자등록번호", { hint: "소개로 온 업체면 소개한 업체의 번호를 적으세요(선택). 소개한 업체에 보상이 생깁니다." })}
           {text("companyFax", "팩스", { hint: "공문 머리글에 들어갑니다." })}
           {text("companyMobile", "대표 휴대폰", { hint: "노무비 합의서에 들어갑니다." })}
         </div>

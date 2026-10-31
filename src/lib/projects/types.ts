@@ -21,6 +21,8 @@ export type GeneralInfo = {
   companyAddress: string;
   companyPhone: string;
   companyBizNo: string;
+  /** 소개한 업체의 사업자등록번호(소개 보상용, 선택) */
+  referrerBizNo: string;
   /** 회사 팩스(공문 머리글) */
   companyFax: string;
   /** 대표 휴대폰(노무비 합의서) */
@@ -87,6 +89,7 @@ export const INITIAL_WORK: WorkState = {
     companyAddress: "",
     companyPhone: "",
     companyBizNo: "",
+    referrerBizNo: "",
     companyFax: "",
     companyMobile: "",
     reference: "",

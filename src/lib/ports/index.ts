@@ -45,4 +45,5 @@ export const getFeeDeps = (): FeeDeps => ({
   delivery: getDeliveryLog(),
   audit: getAuditLog(),
   reference: getReferenceStore(),
+  projects: getProjectStore(),
 });

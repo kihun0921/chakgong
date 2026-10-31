@@ -9,17 +9,17 @@ const consortium = sampleInput({
   receiver: "경기도 연천군청",
   contractAgency: "경기도 연천군청",
   reference: "안전총괄과",
-  docNumber: "한터 제 2026-03-001 호",
+  docNumber: "가나 제 2026-03-001 호",
   copies: "2",
-  company: { name: "한터종합건설㈜", representative: "윤보상", address: "경기도 성남시 분당구 장미로 78", phone: "031-781-8033", bizNo: "132-81-44060", fax: "031-781-8035", mobile: "010-4337-2863" },
+  company: { name: "가나종합건설㈜", representative: "김대표", address: "서울특별시 가나구 다라로 1", phone: "02-000-0001", bizNo: "000-00-00000", fax: "02-000-0002", mobile: "010-0000-0000" },
   jointMembers: [
-    { id: "j2", name: "㈜장헌파트너스", representative: "배문교", shareRate: "", isLead: false },
-    { id: "j1", name: "한터종합건설㈜", representative: "윤보상", shareRate: "", isLead: true },
-    { id: "j3", name: "송하건설㈜", representative: "이재국", shareRate: "", isLead: false },
+    { id: "j2", name: "㈜다라파트너스", representative: "최대표", shareRate: "", isLead: false },
+    { id: "j1", name: "가나종합건설㈜", representative: "김대표", shareRate: "", isLead: true },
+    { id: "j3", name: "마바건설㈜", representative: "박대표", shareRate: "", isLead: false },
   ],
   contractAmount: 17_511_921_000,
   budgetDirectLabor: 5_549_924_648,
-  laborAgreement: { directLaborCost: "", billingDay: "5", paymentDay: "12", bankName: "신한은행", accountNo: "140-012-091923" },
+  laborAgreement: { directLaborCost: "", billingDay: "5", paymentDay: "12", bankName: "신한은행", accountNo: "000-000-000000" },
 });
 
 function gen(input: DocInput) {
@@ -86,14 +86,14 @@ describe("공문과 착공계", () => {
   it("공문: 회사 머리글(주소·전화·팩스), 문서번호·수신·참조·제목, 제출서류 부수, 대표이사 서명", () => {
     const s = byId(specs, "cover");
     const t = json(s);
-    expect(s.blocks[0]).toMatchObject({ type: "letterhead", title: "한터종합건설㈜" });
-    expect(t).toContain("T. 031-781-8033 F. 031-781-8035");
-    expect(t).toContain("한터 제 2026-03-001 호");
+    expect(s.blocks[0]).toMatchObject({ type: "letterhead", title: "가나종합건설㈜" });
+    expect(t).toContain("T. 02-000-0001 F. 02-000-0002");
+    expect(t).toContain("가나 제 2026-03-001 호");
     expect(t).toContain("경기도 연천군청");
     expect(t).toContain("안전총괄과");
     expect(t).toContain("착공서류제출");
     expect(t).toContain("1. 착공 서류 일체 2부.");
-    expect(t).toContain("한터종합건설㈜ 대표이사 윤보상");
+    expect(t).toContain("가나종합건설㈜ 대표이사 김대표");
     expect(t).toContain("귀 청의"); // 수신이 '청'으로 끝나는 기관
   });
 
@@ -115,7 +115,7 @@ describe("공문과 착공계", () => {
   it("공동수급체가 있으면 간지에 대표사를 먼저 모든 회사가 나온다", () => {
     const s = byId(specs, "coverStart");
     expect(s.frame).toBe(true);
-    expect(s.blocks[0]).toMatchObject({ type: "cover", title: "착공신고서", names: ["한터종합건설㈜", "㈜장헌파트너스", "송하건설㈜"] });
+    expect(s.blocks[0]).toMatchObject({ type: "cover", title: "착공신고서", names: ["가나종합건설㈜", "㈜다라파트너스", "마바건설㈜"] });
   });
 
   it("간지 이름은 실제 제출본과 같다", () => {
@@ -169,9 +169,9 @@ describe("노무비 구분관리 및 지급확인제 합의서 (서식1-1, 지�
     expect(t).toContain("행정안전부 예규");
     expect(t).toContain(`금일백칠십오억일천일백구십이만일천원 ( ${WON}17,511,921,000원)`);
     expect(t).toContain(`금오십오억사천구백구십이만사천육백사십팔원(${WON}5,549,924,648원)`);
-    expect(t).toContain("132-81-44060");
+    expect(t).toContain("000-00-00000");
     expect(t).toContain("신한은행");
-    expect(t).toContain("140-012-091923");
+    expect(t).toContain("000-000-000000");
     expect(t).toContain("매월 5 일");
     expect(s.toc).toEqual([7]);
     expect(s.blocks.some((b) => b.type === "pagebreak")).toBe(true); // 2쪽
@@ -210,9 +210,9 @@ describe("확약서 3종", () => {
 
   it("서약자는 공동수급체 회사 모두(대표사 먼저)와 대표자, 수신처 귀하", () => {
     const t = json(direct);
-    expect(t.indexOf("한터종합건설㈜")).toBeLessThan(t.indexOf("㈜장헌파트너스"));
-    expect(t).toContain("대표자 : 배문교");
-    expect(t).toContain("대표자 : 이재국");
+    expect(t.indexOf("가나종합건설㈜")).toBeLessThan(t.indexOf("㈜다라파트너스"));
+    expect(t).toContain("대표자 : 최대표");
+    expect(t).toContain("대표자 : 박대표");
     expect(t).toContain("경기도 연천군청 귀하");
     expect(direct.frame).toBe(true);
   });

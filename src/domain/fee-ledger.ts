@@ -4,6 +4,7 @@
 
 import { addDays, diffDays, type DateStr } from "./calendar";
 import { calcFee, formatWon } from "./fee";
+import type { LoyaltyReason, PricedFee } from "./retention-pricing";
 
 export type FeeStatus = "미입금" | "입금 완료" | "환불" | "취소";
 export const FEE_STATUSES: FeeStatus[] = ["미입금", "입금 완료", "환불", "취소"];
@@ -11,11 +12,15 @@ export const FEE_STATUSES: FeeStatus[] = ["미입금", "입금 완료", "환불"
 export const REFUND_DAYS = 7;
 export const REFUND_WARN_DAYS = 2;
 
+/** 재의뢰·단골·소개 할인 내용 (SR-FEE-14). 할인 판정을 거친 공사에 기록된다. */
+export type FeeDiscount = { rate: number; reason: LoyaltyReason; referralApplied: boolean; amountWon: number };
+
 export type FeeRecord = {
   projectId: string;
   supply: number;
   vat: number;
   total: number;
+  discount?: FeeDiscount;
   status: FeeStatus;
   taxInvoice: { issued: boolean; date: DateStr | null };
   payment: { date: DateStr; payer: string; amount: number } | null;
@@ -42,6 +47,38 @@ export function createFee(projectId: string, supply: number, createdAt: DateStr)
     refundedAt: null,
     createdAt,
   };
+}
+
+export const toDiscount = (p: PricedFee): FeeDiscount => ({
+  rate: p.rate,
+  reason: p.loyalty.reason,
+  referralApplied: p.referralApplied,
+  amountWon: p.discountWon,
+});
+
+export type RepriceResult =
+  | { ok: true; fee: FeeRecord; changed: boolean }
+  | { ok: false; reason: "paid" | "delivered" | "closed"; message: string; fee: FeeRecord };
+
+/**
+ * 할인 재산정 (SR-FEE-14): '미입금'이고 납품 전이며 환불 요청·환불·취소가 아닐 때만 금액을 다시 정한다.
+ * 입금·납품 뒤에는 기록된 금액을 바꾸지 않는다(SR-FEE-06).
+ */
+export function repriceFee(fee: FeeRecord, priced: PricedFee, delivered: boolean): RepriceResult {
+  if (fee.status === "환불" || fee.status === "취소" || fee.cancelRequestedAt !== null) {
+    return { ok: false, reason: "closed", message: "환불 요청·환불·취소된 공사의 금액은 바꿀 수 없습니다.", fee };
+  }
+  if (fee.status === "입금 완료") {
+    return { ok: false, reason: "paid", message: "입금 완료된 공사의 금액은 바꿀 수 없습니다.", fee };
+  }
+  if (delivered) {
+    return { ok: false, reason: "delivered", message: "납품한 공사의 금액은 바꿀 수 없습니다.", fee };
+  }
+  const discount = toDiscount(priced);
+  const next: FeeRecord = { ...fee, supply: priced.supply, vat: priced.vat, total: priced.total, discount };
+  const changed =
+    fee.supply !== next.supply || fee.vat !== next.vat || fee.total !== next.total || JSON.stringify(fee.discount) !== JSON.stringify(discount);
+  return { ok: true, fee: next, changed };
 }
 
 const appendMemo = (memo: string, line: string) => (memo ? `${memo}\n${line}` : line);

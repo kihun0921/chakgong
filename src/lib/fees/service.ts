@@ -10,15 +10,19 @@ import {
   recordRefund,
   recordTaxInvoice,
   requestCancel,
+  toDiscount,
   type FeeRecord,
   type PaymentInput,
 } from "@/domain/fee-ledger";
 import type { AuditLog } from "@/lib/ports/audit";
 import type { DeliveryLog } from "@/lib/ports/delivery";
 import type { FeeStore } from "@/lib/ports/fees";
+import type { ProjectStore } from "@/lib/ports/projects";
 import type { ReferenceStore } from "@/lib/ports/reference.local";
+import { priceProject } from "./history";
 
-export type FeeDeps = { fees: FeeStore; delivery: DeliveryLog; audit: AuditLog; reference: ReferenceStore };
+/** projects가 있으면 같은 사업자등록번호의 이전 공사를 보고 할인을 적용한다(SR-FEE-14). 없으면 정가다. */
+export type FeeDeps = { fees: FeeStore; delivery: DeliveryLog; audit: AuditLog; reference: ReferenceStore; projects?: ProjectStore };
 
 /** 한국 날짜(yyyy-mm-dd). 서버 시간대와 상관없이 같은 날로 본다. */
 export const todayKst = (now = new Date()): string =>
@@ -37,13 +41,23 @@ export function withProjectLock<T>(projectId: string, fn: () => Promise<T>): Pro
   return run;
 }
 
-/** 공사를 만들 때 용역비를 '미입금'으로 기록한다. 금액은 그때의 설정값으로 고정된다 (SR-FEE-01). */
+/**
+ * 공사를 만들 때 용역비를 '미입금'으로 기록한다. 금액은 그때의 설정값(할인 반영)으로 정해진다 (SR-FEE-01·14).
+ * 납품·입금 전에는 사업자등록번호를 입력한 뒤 repriceFor로 다시 정할 수 있다.
+ */
 export async function createFeeFor(deps: FeeDeps, projectId: string, by: string, now = new Date()): Promise<FeeRecord> {
   const existing = await deps.fees.get(projectId);
   if (existing) return existing;
-  const fee = createFee(projectId, (await deps.reference.get()).feeSupply, todayKst(now));
+  const today = todayKst(now);
+  let fee: FeeRecord;
+  if (deps.projects) {
+    const priced = await priceProject({ ...deps, projects: deps.projects }, projectId, today);
+    fee = { ...createFee(projectId, priced.supply, today), discount: toDiscount(priced) };
+  } else {
+    fee = createFee(projectId, (await deps.reference.get()).feeSupply, today);
+  }
   await deps.fees.put(fee);
-  await deps.audit.record({ user: by, action: "fee.create", target: projectId, detail: { total: fee.total } });
+  await deps.audit.record({ user: by, action: "fee.create", target: projectId, detail: { total: fee.total, discountRate: fee.discount?.rate ?? 0 } });
   return fee;
 }
 

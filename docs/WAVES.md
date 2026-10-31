@@ -195,6 +195,20 @@ Wave 5·6은 베타와 병행한다(베타는 G3 통과 후 시작). Wave 1~3에
 | 금융 인증 정보 비저장 (SR-FEE-11) | 완료(저장 항목 고정 시험) | `fees.test.ts` |
 | 용역비 내역의 Supabase 구현, 공사 삭제(5년 보존 후)와 용역비 내역 보존 방식 | 맨 나중 — 지금은 공사를 지워도 용역비 내역은 남김 | |
 
+### 리텐션 (SR-FEE-14·15, `docs/RETENTION.md`)
+
+| 구분 | 상태 | 위치 |
+| --- | --- | --- |
+| 사업자등록번호 정규화·검증 자릿수·마스킹 (T-46) | 완료 | `src/domain/biz-no.ts` |
+| 재의뢰·단골 할인 판정, 소개 크레딧, 할인 반영 용역비 (T-47~T-49) | 완료(순수 함수) | `src/domain/retention-pricing.ts` |
+| 할인 용역비의 입금 확인 (T-50) | 완료(기존 `fee-ledger.ts`가 기록된 합계와 비교) | `retention-pricing.test.ts` |
+| 재의뢰율·재의뢰 간격·소개율 (T-51~T-53) | 완료(순수 함수) | `src/domain/retention-metrics.ts` |
+| 공사 생성·복제 때 할인 적용: 같은 사업자등록번호의 이전 공사를 읽어 `priceFee` 호출, 할인 내용을 용역비에 기록 (T-55) | 완료 | `src/lib/fees/history.ts`, `service.ts`의 `createFeeFor` |
+| 납품·입금 전 재산정: 사업자등록번호·소개 업체가 바뀌면 자동, 패널의 '할인 다시 계산' 버튼으로 수동. 납품·입금·환불·취소 뒤에는 불변, 변경은 `fee.reprice` 이력 (T-54·T-56) | 완료 | `src/lib/fees/pricing.ts`, `fee-ledger.ts`의 `repriceFee`, `/api/projects/[id]` PUT, `/api/projects/[id]/fee` |
+| 소개한 업체 입력(일반 장 `referrerBizNo`)과 소개 크레딧(소개받은 업체의 첫 용역비 입금 시 1건당 1개, 쓴 공사가 환불·취소되면 복구) (T-57) | 완료 | `types.ts`, `GeneralChapter.tsx`, `history.ts` |
+| 용역비 패널의 할인율·사유 표시(SR-FEE-10), 대시보드 리텐션 지표(재의뢰율·소개율·할인 건수·재의뢰 간격) (T-58) | 완료 | `FeePanel.tsx`, `DashboardView.tsx`, `retentionReport` |
+| 업체·공사 이력을 공사마다 다시 읽는 방식은 로컬 파일 저장소 규모용 — Supabase 전환 때 업체 번호 색인(조회용 열)으로 교체 | 맨 나중 | `loadCompanyProjects` |
+
 ## Wave 6 — 품질·알림·배포 (코드·문서 완료, 서버 작업은 배포 때)
 
 - 비기능 수치 측정(5분·30초·3초·p95 1,000ms), 알림(SR-NF-27~31), 백업(일 1회) 마련·복구 시험, Supabase 사용량 점검

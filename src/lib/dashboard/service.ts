@@ -4,6 +4,7 @@ import { refundAlert, summarizeFees, type FeeRecord, type FeeSummary, type Refun
 import { evaluateAlerts, type Alert } from "@/lib/monitor/alerts";
 import type { AlertStore } from "@/lib/ports/alerts";
 import { findInconsistencies, type FeeDeps } from "@/lib/fees/service";
+import { retentionReport, type RetentionReport } from "@/lib/fees/pricing";
 import type { ProjectStore } from "@/lib/ports/projects";
 import { computeMetrics, type OpsMetrics } from "./metrics";
 
@@ -16,6 +17,7 @@ export type Dashboard = {
   metrics: OpsMetrics;
   alerts: Alert[];
   inconsistencies: { projectId: string; projectName: string; message: string }[];
+  retention: RetentionReport;
 };
 
 export async function loadDashboard(
@@ -35,5 +37,6 @@ export async function loadDashboard(
   const inconsistencies = (await findInconsistencies(deps)).map((x) => ({ ...x, projectName: nameOf(x.projectId) }));
   const entries = await deps.audit.list();
   const alerts = evaluateAlerts(entries, new Date(), await deps.alerts.list());
-  return { from, to, summary, rows, metrics: computeMetrics(entries, from, to), alerts, inconsistencies };
+  const retention = await retentionReport(deps, today);
+  return { from, to, summary, rows, metrics: computeMetrics(entries, from, to), alerts, inconsistencies, retention };
 }

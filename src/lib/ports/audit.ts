@@ -24,6 +24,7 @@ export type AuditAction =
   | "fee.cancel"
   | "fee.cancel.rejected"
   | "fee.refund"
+  | "fee.reprice"
   | "budget.parse"
   | "export.rejected"
   | "draft.start"
