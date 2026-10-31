@@ -19,6 +19,7 @@ import {
   type ProcessDef,
 } from "@/lib/work/composition";
 import { NumInput } from "@/components/NumInput";
+import { AiNameSuggest } from "@/components/ai/AiPanels";
 import { btnCls, btnGhostCls, inputCls, labelCls, type PatchWork, type WorkState } from "./types";
 
 const won = (n: number) => n.toLocaleString("ko-KR");
@@ -63,6 +64,11 @@ export function ProcessComposer({ work, patch, parsed }: Props) {
           처음 구성으로
         </button>
       </div>
+
+      <AiNameSuggest
+        items={comp.map((d) => ({ id: d.id, name: d.name, amountWon: d.amount }))}
+        onApply={(renames) => patch({ composition: renames.reduce((c, r) => renameProcess(c, r.id, r.name), comp) })}
+      />
 
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[820px] border-collapse text-[13px]">

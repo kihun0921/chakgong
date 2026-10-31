@@ -10,6 +10,8 @@ import { applyScheduleTemplate } from "@/domain/template";
 import { mergeHolidaysText, WORK_TYPES, type ReferenceData, type WorkType } from "@/lib/reference/types";
 import { buildPlan, extraToLines, type BuildPlanOutput, type ExtraLine } from "@/lib/work/buildPlan";
 import { defaultComposition, type Composition } from "@/lib/work/composition";
+import { AiRemarkDraft, AiValidationExplain } from "@/components/ai/AiPanels";
+import { Gantt3D } from "./Gantt3D";
 import { ProcessComposer } from "./ProcessComposer";
 import { BudgetImport } from "./BudgetImport";
 import { Tabs } from "./Tabs";
@@ -112,6 +114,7 @@ function ValidationPanel({ out }: { out: BuildPlanOutput }) {
               <li key={i.message}>{i.message}</li>
             ))}
           </ul>
+          <AiValidationExplain issues={v.issues.map((i) => ({ code: i.code, message: i.message }))} />
         </>
       )}
       {out.warnings.length > 0 && (
@@ -173,6 +176,17 @@ function GanttTab({ out, work, patch, result, reference }: { out: BuildPlanOutpu
   const totalWeight = progress.rows.reduce((s, r) => s + r.weight, 0);
   const totalAmount = out.processes.reduce((s, p) => s + p.amount, 0);
   const grand = work.parsed?.grandTotal ?? work.parsed?.summaryTotal ?? totalAmount;
+  const durationDays = Number(work.general.durationDays);
+  const [open3d, setOpen3d] = useState(false);
+  // 3D 보기는 계산된 일정·보할만 옮긴다. 배열이 바뀔 때만 다시 그리도록 고정한다.
+  const bars3d = useMemo(
+    () => out.processes.map((p, i) => ({ key: p.key, name: p.name, startDay: p.startDay, endDay: p.endDay, weight: progress.rows[i]?.weight ?? 0 })),
+    [out.processes, progress.rows],
+  );
+  const draftProcesses = useMemo(
+    () => out.processes.map((p) => ({ key: p.key, name: p.name, startDay: p.startDay, endDay: p.endDay })),
+    [out.processes],
+  );
 
   const setDay = (key: string, field: "startDay" | "endDay", v: string, cur: { startDay: number; endDay: number }) => {
     const n = Math.floor(Number(v));
@@ -187,6 +201,12 @@ function GanttTab({ out, work, patch, result, reference }: { out: BuildPlanOutpu
         준공예정일 {result.completion}. 공종마다 착수·완료 일차(착공일 = 1일차)를 입력하면 진도율이 바로 다시 계산됩니다. 일정을 정하지 않은 공정은 전체 공기로 둡니다.
       </p>
       <TemplateBar out={out} work={work} patch={patch} reference={reference} />
+      <AiRemarkDraft
+        durationDays={durationDays}
+        processes={draftProcesses}
+        remarks={work.remarks}
+        onApply={(drafts) => patch({ remarks: { ...work.remarks, ...Object.fromEntries(drafts.map((d) => [d.key, d.text])) } })}
+      />
       <div className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[900px] border-collapse text-[12.5px]">
           <thead>
@@ -291,6 +311,10 @@ function GanttTab({ out, work, patch, result, reference }: { out: BuildPlanOutpu
           </tfoot>
         </table>
       </div>
+      <details className="mt-4" onToggle={(e) => setOpen3d((e.currentTarget as HTMLDetailsElement).open)}>
+        <summary className="cursor-pointer text-[14px] font-semibold">공정 진행 3D로 보기</summary>
+        {open3d && <Gantt3D processes={bars3d} durationDays={durationDays} />}
+      </details>
     </section>
   );
 }

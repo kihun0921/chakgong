@@ -30,6 +30,7 @@ export type AuditAction =
   | "draft.start"
   | "draft.ready"
   | "doc.mismatch"
+  | "ai.request"
   | "perf";
 
 export type AuditEntry = {

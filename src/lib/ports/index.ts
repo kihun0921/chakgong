@@ -4,6 +4,8 @@ import { createLoginLimiter, type LoginLimiter } from "@/lib/auth/service";
 import type { FeeDeps } from "@/lib/fees/service";
 import type { ProjectDeps } from "@/lib/projects/service";
 import type { AdminStore } from "./admins";
+import type { AiModel } from "./ai";
+import { createGeminiModel } from "./ai.gemini";
 import { createLocalAdminStore } from "./admins.local";
 import type { AuditLog } from "./audit";
 import { createLocalAuditLog } from "./audit.local";
@@ -32,6 +34,8 @@ export const getFileStore = (): FileStore => once("files", createLocalFileStore)
 export const getReferenceStore = (): ReferenceStore => once("reference", createLocalReferenceStore);
 export const getFeeStore = (): FeeStore => once("fees", createLocalFeeStore);
 export const getBetaStore = (): BetaStore => once("beta", createLocalBetaStore);
+/** GEMINI_API_KEY가 없으면 null(AI 보조 꺼짐) */
+export const getAiModel = (): AiModel | null => once<AiModel | null>("ai", () => createGeminiModel());
 export const getLoginLimiter = (): LoginLimiter => once("limiter", () => createLoginLimiter());
 
 export const getProjectDeps = (): ProjectDeps => ({

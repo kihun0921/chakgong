@@ -5,6 +5,7 @@ import type { FeeRecord, RefundAlert } from "@/domain/fee-ledger";
 import type { LoyaltyReason } from "@/domain/retention-pricing";
 import { btnCls, btnGhostCls, inputCls, labelCls } from "@/components/work/types";
 import { NumInput } from "@/components/NumInput";
+import { AiFollowUp } from "@/components/ai/AiPanels";
 
 type View = { fee: FeeRecord; delivered: boolean; alert: RefundAlert };
 const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
@@ -184,6 +185,8 @@ export function FeePanel({ projectId }: { projectId: string }) {
             </button>
           </div>
         )}
+
+        {v.delivered && !closed && <AiFollowUp />}
 
         {!closed && !f.cancelRequestedAt && (
           <div className="mt-4 border-t border-border pt-3">
